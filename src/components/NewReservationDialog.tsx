@@ -66,6 +66,9 @@ export function NewReservationDialog() {
 
   const onSubmit = async (values: ReservationFormValues) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
       const startDateTime = new Date(values.date);
       const [startHours, startMinutes] = values.startTime.split(":");
       startDateTime.setHours(parseInt(startHours), parseInt(startMinutes));
@@ -78,9 +81,11 @@ export function NewReservationDialog() {
         .from("reservations")
         .insert({
           car_id: values.carId,
+          user_id: user.id,
           start_time: startDateTime.toISOString(),
           end_time: endDateTime.toISOString(),
           purpose: values.purpose,
+          status: 'pending'
         });
 
       if (error) throw error;

@@ -42,7 +42,6 @@ export function ReservationsTimeline() {
   const { data: reservations, isLoading } = useQuery({
     queryKey: ["all-reservations"],
     queryFn: async () => {
-      // First, get reservations with car details
       const { data: reservationsData, error } = await supabase
         .from("reservations")
         .select(`
@@ -50,12 +49,12 @@ export function ReservationsTimeline() {
           start_time,
           end_time,
           user_id,
-          cars (
+          car:cars (
             make,
             model
           )
         `)
-        .order("start_time", { ascending: true });
+        .order('start_time', { ascending: true });
 
       if (error) throw error;
 
@@ -65,7 +64,9 @@ export function ReservationsTimeline() {
       if (usersError) throw usersError;
 
       // Create a map of user IDs to emails
-      const userEmailMap = new Map(users.users.map(user => [user.id, user.email]));
+      const userEmailMap = new Map(
+        users.users.map((user: { id: string; email: string }) => [user.id, user.email])
+      );
 
       // Combine the data
       return reservationsData.map((reservation: any) => ({
@@ -120,11 +121,12 @@ export function ReservationsTimeline() {
             content={({ active, payload }) => {
               if (!active || !payload?.length) return null;
 
+              const value = payload[0].value as number;
               return (
                 <ChartTooltipContent>
                   <div className="flex flex-col gap-2">
                     <div className="font-medium">
-                      {format(new Date(payload[0].value), "MM/dd/yyyy HH:mm")}
+                      {format(new Date(value), "MM/dd/yyyy HH:mm")}
                     </div>
                     <div>{payload[0].payload.label}</div>
                   </div>
