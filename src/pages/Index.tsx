@@ -2,10 +2,14 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { CalendarDays, Settings, User, Bell } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const Index = () => {
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const getUserEmail = async () => {
@@ -16,51 +20,90 @@ const Index = () => {
   }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/login");
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error signing out",
+        description: error.message
+      });
+    } else {
+      navigate("/login");
+    }
+  };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
   };
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
         {/* Header Section */}
-        <header className="flex justify-between items-center mb-12 py-4">
-          <h1 className="text-3xl font-bold text-primary">Dashboard</h1>
-          <Button onClick={handleLogout} variant="outline">
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0 mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-primary">{getGreeting()}</h1>
+            <p className="text-muted-foreground mt-1">
+              {userEmail ? `Welcome back, ${userEmail}` : 'Welcome back!'}
+            </p>
+          </div>
+          <Button onClick={handleLogout} variant="outline" className="shrink-0">
             Sign Out
           </Button>
         </header>
 
-        {/* Welcome Section */}
-        <div className="bg-card rounded-lg shadow-lg p-8 mb-8">
-          <h2 className="text-2xl font-semibold mb-4">
-            Welcome{userEmail ? `, ${userEmail}` : ''}! 👋
-          </h2>
-          <p className="text-muted-foreground">
-            This is your personal dashboard. You're successfully logged in and can start using the application.
-          </p>
+        {/* Quick Actions Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <User className="h-8 w-8 mb-4 text-primary" />
+              <h3 className="font-semibold mb-2">Profile</h3>
+              <p className="text-sm text-muted-foreground">View and edit your profile settings</p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <CalendarDays className="h-8 w-8 mb-4 text-primary" />
+              <h3 className="font-semibold mb-2">Calendar</h3>
+              <p className="text-sm text-muted-foreground">Check your upcoming events</p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <Bell className="h-8 w-8 mb-4 text-primary" />
+              <h3 className="font-semibold mb-2">Notifications</h3>
+              <p className="text-sm text-muted-foreground">View your latest notifications</p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <Settings className="h-8 w-8 mb-4 text-primary" />
+              <h3 className="font-semibold mb-2">Settings</h3>
+              <p className="text-sm text-muted-foreground">Manage your preferences</p>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Content Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-card rounded-lg shadow p-6">
-            <h3 className="text-xl font-semibold mb-3">Getting Started</h3>
-            <p className="text-muted-foreground">
-              Explore the features and functionalities available to you. Need help? Check out our documentation.
-            </p>
-          </div>
-          <div className="bg-card rounded-lg shadow p-6">
-            <h3 className="text-xl font-semibold mb-3">Quick Actions</h3>
-            <div className="space-y-2">
-              <Button className="w-full" variant="secondary">
-                View Profile
-              </Button>
-              <Button className="w-full" variant="secondary">
-                Settings
-              </Button>
+        {/* Activity Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+            <CardDescription>Here's what's been happening in your account</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <p className="text-muted-foreground text-center py-8">
+                No recent activity to show
+              </p>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

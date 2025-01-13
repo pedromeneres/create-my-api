@@ -12,9 +12,15 @@ const Login = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session) {
         navigate("/");
+      }
+      if (event === "USER_UPDATED") {
+        const { error } = await supabase.auth.getSession();
+        if (error) {
+          handleError(error);
+        }
       }
       if (event === "SIGNED_OUT") {
         setError(null);
@@ -58,7 +64,6 @@ const Login = () => {
               },
             }}
             providers={[]}
-            onError={handleError}
           />
         </CardContent>
       </Card>
