@@ -13,12 +13,23 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export function ReservationsTimeline() {
   const [selectedDay, setSelectedDay] = useState<string>("today");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [session, setSession] = useState(null);
+  const [reservationToCancel, setReservationToCancel] = useState<string | null>(null);
 
   useEffect(() => {
     // Get initial session
@@ -119,7 +130,7 @@ export function ReservationsTimeline() {
       console.log("Transformed reservations:", transformedReservations);
       return transformedReservations;
     },
-    enabled: !!session, // Only run query when session exists
+    enabled: !!session,
   });
 
   const handleCancelReservation = async (reservationId: string) => {
@@ -146,6 +157,9 @@ export function ReservationsTimeline() {
         title: "Reservation cancelled",
         description: "Your reservation has been successfully cancelled.",
       });
+
+      // Reset the reservationToCancel state
+      setReservationToCancel(null);
 
       // Refresh the reservations data
       queryClient.invalidateQueries({ queryKey: ["all-reservations"] });
@@ -225,7 +239,7 @@ export function ReservationsTimeline() {
                       variant="outline"
                       size="sm"
                       className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300 font-semibold"
-                      onClick={() => handleCancelReservation(reservation.id)}
+                      onClick={() => setReservationToCancel(reservation.id)}
                     >
                       <X className="h-4 w-4 mr-1" />
                       Cancel
@@ -237,6 +251,26 @@ export function ReservationsTimeline() {
           )}
         </div>
       </div>
+
+      <AlertDialog open={!!reservationToCancel} onOpenChange={() => setReservationToCancel(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Reservation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel this reservation? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No, keep reservation</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => reservationToCancel && handleCancelReservation(reservationToCancel)}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Yes, cancel reservation
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
