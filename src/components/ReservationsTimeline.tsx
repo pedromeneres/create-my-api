@@ -115,17 +115,19 @@ export function ReservationsTimeline() {
 
       console.log("Fetched reservations:", reservationsData);
       
-      const transformedReservations = reservationsData.map((reservation: any) => {
-        const canCancel = user.id === reservation.user_id && reservation.status !== 'cancelled';
-        console.log(`Reservation ${reservation.id} - User ID match: ${user.id === reservation.user_id}, Status: ${reservation.status}, Can Cancel: ${canCancel}`);
-        
-        return {
-          ...reservation,
-          car: reservation.car,
-          user_email: user.email,
-          canCancel,
-        };
-      });
+      const transformedReservations = reservationsData
+        .filter(reservation => reservation.status !== 'cancelled') // Filter out cancelled reservations
+        .map((reservation: any) => {
+          const canCancel = user.id === reservation.user_id && reservation.status !== 'cancelled';
+          console.log(`Reservation ${reservation.id} - User ID match: ${user.id === reservation.user_id}, Status: ${reservation.status}, Can Cancel: ${canCancel}`);
+          
+          return {
+            ...reservation,
+            car: reservation.car,
+            user_email: user.email,
+            canCancel,
+          };
+        });
 
       console.log("Transformed reservations:", transformedReservations);
       return transformedReservations;
@@ -201,11 +203,7 @@ export function ReservationsTimeline() {
             reservations?.map((reservation: TimelineReservation) => (
               <div 
                 key={reservation.id}
-                className={`flex items-center justify-between p-4 bg-gradient-to-r rounded-lg border-2 hover:border-blue-500 transition-all duration-200 hover:shadow-md ${
-                  reservation.status === 'cancelled' 
-                    ? 'from-gray-50 to-gray-100 opacity-75' 
-                    : 'from-white to-blue-50'
-                }`}
+                className={`flex items-center justify-between p-4 bg-gradient-to-r from-white to-blue-50 rounded-lg border-2 hover:border-blue-500 transition-all duration-200 hover:shadow-md`}
               >
                 <div className="space-y-1">
                   <div className="font-semibold text-sm text-blue-900">
@@ -216,7 +214,6 @@ export function ReservationsTimeline() {
                   </div>
                   <div className="text-xs">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                      reservation.status === 'cancelled' ? 'bg-gray-100 text-gray-800' :
                       reservation.status === 'approved' ? 'bg-green-100 text-green-800' :
                       'bg-yellow-100 text-yellow-800'
                     }`}>
