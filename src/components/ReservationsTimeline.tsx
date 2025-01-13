@@ -29,14 +29,14 @@ interface TimelineReservation {
 }
 
 const colors = [
-  "#FF6B6B",
-  "#4ECDC4",
-  "#45B7D1",
-  "#96CEB4",
-  "#FFEEAD",
-  "#D4A5A5",
-  "#9B59B6",
-  "#3498DB",
+  "#9b87f5", // Primary Purple
+  "#7E69AB", // Secondary Purple
+  "#6E59A5", // Tertiary Purple
+  "#8B5CF6", // Vivid Purple
+  "#D946EF", // Magenta Pink
+  "#F97316", // Bright Orange
+  "#0EA5E9", // Ocean Blue
+  "#1EAEDB", // Bright Blue
 ];
 
 export function ReservationsTimeline() {
@@ -84,21 +84,37 @@ export function ReservationsTimeline() {
   // Create array of 5 days
   const days = Array.from({ length: 5 }, (_, i) => addDays(weekStart, i));
   
-  // Create array of 24 hours
-  const hours = Array.from({ length: 24 }, (_, i) => ({
-    hour: i,
-    label: format(addHours(startOfDay(new Date()), i), 'HH:mm'),
+  // Create array of hours from 8 to 22
+  const hours = Array.from({ length: 15 }, (_, i) => ({
+    hour: i + 8,
+    label: format(addHours(startOfDay(new Date()), i + 8), 'HH:mm'),
   }));
 
-  const timelineData = reservations?.map((reservation) => ({
-    x: new Date(reservation.start_time).getTime(),
-    y: new Date(reservation.start_time).getHours(),
-    height: (new Date(reservation.end_time).getHours() - new Date(reservation.start_time).getHours()),
-    label: `${reservation.user_email} - ${reservation.car.make} ${reservation.car.model}`,
-    id: reservation.id,
-    startTime: format(new Date(reservation.start_time), 'HH:mm'),
-    endTime: format(new Date(reservation.end_time), 'HH:mm'),
-  }));
+  // Create a map of car IDs to colors
+  const carColorMap = new Map();
+  reservations?.forEach((reservation) => {
+    const carId = `${reservation.car.make}-${reservation.car.model}`;
+    if (!carColorMap.has(carId)) {
+      carColorMap.set(carId, colors[carColorMap.size % colors.length]);
+    }
+  });
+
+  const timelineData = reservations?.map((reservation) => {
+    const startHour = new Date(reservation.start_time).getHours();
+    const endHour = new Date(reservation.end_time).getHours();
+    const carId = `${reservation.car.make}-${reservation.car.model}`;
+    
+    return {
+      x: new Date(reservation.start_time).getTime(),
+      y: Math.max(8, Math.min(startHour, 22)), // Clamp between 8 and 22
+      height: Math.min(endHour, 22) - Math.max(startHour, 8), // Adjust height to fit within bounds
+      label: `${reservation.user_email}\n${reservation.car.make} ${reservation.car.model}`,
+      id: reservation.id,
+      startTime: format(new Date(reservation.start_time), 'HH:mm'),
+      endTime: format(new Date(reservation.end_time), 'HH:mm'),
+      color: carColorMap.get(carId),
+    };
+  });
 
   return (
     <div className="h-[800px] w-full bg-background rounded-lg shadow-sm border">
@@ -132,7 +148,7 @@ export function ReservationsTimeline() {
           />
           <YAxis
             type="number"
-            domain={[0, 23]}
+            domain={[8, 22]}
             ticks={hours.map(h => h.hour)}
             tickFormatter={(hour) => format(addHours(startOfDay(new Date()), hour), 'HH:mm')}
             reversed
@@ -182,23 +198,39 @@ export function ReservationsTimeline() {
               // Convert the height from hours to pixels
               const pixelHeight = (height as number) * 30; // Adjust this multiplier to change the visual height
               return (
-                <rect
-                  x={cx - 40}
-                  y={cy}
-                  width={80}
-                  height={pixelHeight || 30} // Minimum height of 30px
-                  fill={fill}
-                  rx={6}
-                  ry={6}
-                />
+                <g>
+                  <rect
+                    x={cx - 40}
+                    y={cy}
+                    width={80}
+                    height={pixelHeight || 30} // Minimum height of 30px
+                    fill={fill}
+                    rx={6}
+                    ry={6}
+                  />
+                  <text
+                    x={cx}
+                    y={cy + 15}
+                    textAnchor="middle"
+                    fill="white"
+                    fontSize="10"
+                    className="font-medium"
+                  >
+                    {(props as any).payload.label.split('\n').map((line: string, i: number) => (
+                      <tspan key={i} x={cx} dy={i === 0 ? 0 : 12}>
+                        {line}
+                      </tspan>
+                    ))}
+                  </text>
+                </g>
               );
             }}
           >
-            {timelineData?.map((entry, index) => (
+            {timelineData?.map((entry) => (
               <Cell
                 key={entry.id}
-                fill={colors[index % colors.length]}
-                stroke={colors[index % colors.length]}
+                fill={entry.color}
+                stroke={entry.color}
               />
             ))}
           </Scatter>
