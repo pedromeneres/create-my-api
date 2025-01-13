@@ -30,9 +30,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
             setIsAuthenticated(false);
             toast({
               variant: "destructive",
-              title: "Session Error",
+              title: "Authentication Error",
               description: "Please sign in again",
             });
+            // Force refresh the session
+            await supabase.auth.signOut();
           }
         } else {
           if (mounted) {
@@ -43,6 +45,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
                 title: "Session Expired",
                 description: "Please sign in again",
               });
+              // Ensure we clear any stale session data
+              await supabase.auth.signOut();
             }
           }
         }
@@ -50,6 +54,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
         console.error("Session check failed:", error);
         if (mounted) {
           setIsAuthenticated(false);
+          // Ensure we clear any stale session data
+          await supabase.auth.signOut();
         }
       } finally {
         if (mounted) {
@@ -63,7 +69,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       console.log("Auth state changed:", event, !!session);
       
       if (mounted) {
-        if (event === 'SIGNED_OUT') {
+        if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
           setIsAuthenticated(false);
           queryClient.clear(); // Clear query cache on logout
           toast({
@@ -71,15 +77,24 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
             title: "Signed Out",
             description: "You have been signed out successfully",
           });
-        } else if (event === 'SIGNED_IN') {
+        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           setIsAuthenticated(true);
-          toast({
-            variant: "default",
-            title: "Welcome Back",
-            description: "You have been signed in successfully",
-          });
-        } else if (event === 'TOKEN_REFRESHED') {
-          setIsAuthenticated(true);
+          if (event === 'SIGNED_IN') {
+            toast({
+              variant: "default",
+              title: "Welcome Back",
+              description: "You have been signed in successfully",
+            });
+          }
+        } else if (event === 'USER_UPDATED') {
+          // Refresh the session when user is updated
+          const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+          if (error || !currentSession) {
+            setIsAuthenticated(false);
+            await supabase.auth.signOut();
+          } else {
+            setIsAuthenticated(true);
+          }
         }
         
         setIsLoading(false);
