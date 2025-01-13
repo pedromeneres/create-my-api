@@ -45,7 +45,7 @@ interface Car {
 const formSchema = z.object({
   carId: z.string({
     required_error: "Please select a car",
-  }),
+  }).min(1, "Please select a car"),
   date: z.date({
     required_error: "Please select a date",
   }),
@@ -105,7 +105,23 @@ export function NewReservationDialog({
   const onSubmit = async (values: ReservationFormValues) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
+      if (!user?.id) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "You must be logged in to make a reservation",
+        });
+        return;
+      }
+
+      if (!values.carId) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Please select a car",
+        });
+        return;
+      }
 
       // Create a new date object for start time
       const startDateTime = new Date(values.date);
@@ -132,7 +148,7 @@ export function NewReservationDialog({
           start_time: startDateTime.toISOString(),
           end_time: endDateTime.toISOString(),
           purpose: values.purpose,
-          status: 'Reserved'  // Changed from 'approved' to 'Reserved'
+          status: 'Reserved'
         });
 
       if (error) throw error;
