@@ -24,7 +24,7 @@ interface TimelineReservation {
     make: string;
     model: string;
   };
-  user_email: string;
+  user_id: string;
 }
 
 const colors = [
@@ -58,25 +58,21 @@ export function ReservationsTimeline() {
 
       if (error) throw error;
 
-      // Get user emails
-      const { data: users, error: usersError } = await supabase.auth.admin.listUsers();
+      // Get current user's email
+      const { data: { user } } = await supabase.auth.getUser();
       
-      if (usersError) throw usersError;
-
-      // Create a map of user IDs to emails
+      // Create a simple map with just the current user's ID and email
       const emailMap = new Map();
-      users.users.forEach((user: any) => {
-        if (user.email) {
-          emailMap.set(user.id, user.email);
-        }
-      });
+      if (user?.email) {
+        emailMap.set(user.id, user.email);
+      }
 
       // Combine the data
       return reservationsData.map((reservation: any) => ({
         ...reservation,
         car: reservation.car,
-        user_email: emailMap.get(reservation.user_id) || 'Unknown User',
-      })) as TimelineReservation[];
+        user_email: emailMap.get(reservation.user_id) || 'Other User',
+      }));
     },
   });
 
