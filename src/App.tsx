@@ -33,7 +33,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
               title: "Authentication Error",
               description: "Please sign in again",
             });
-            // Force refresh the session
+            // Clear session and cache
+            queryClient.clear();
             await supabase.auth.signOut();
           }
         } else {
@@ -45,7 +46,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
                 title: "Session Expired",
                 description: "Please sign in again",
               });
-              // Ensure we clear any stale session data
+              // Clear session and cache
+              queryClient.clear();
               await supabase.auth.signOut();
             }
           }
@@ -54,7 +56,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
         console.error("Session check failed:", error);
         if (mounted) {
           setIsAuthenticated(false);
-          // Ensure we clear any stale session data
+          queryClient.clear();
           await supabase.auth.signOut();
         }
       } finally {
@@ -69,9 +71,9 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       console.log("Auth state changed:", event, !!session);
       
       if (mounted) {
-        if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        if (event === 'SIGNED_OUT') {
           setIsAuthenticated(false);
-          queryClient.clear(); // Clear query cache on logout
+          queryClient.clear();
           toast({
             variant: "default",
             title: "Signed Out",
@@ -91,6 +93,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
           const { data: { session: currentSession }, error } = await supabase.auth.getSession();
           if (error || !currentSession) {
             setIsAuthenticated(false);
+            queryClient.clear();
             await supabase.auth.signOut();
           } else {
             setIsAuthenticated(true);
