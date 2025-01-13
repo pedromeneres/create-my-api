@@ -1,11 +1,4 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { format } from "date-fns";
 import { Reservation } from "@/types/reservation";
 
 interface ReservationsTableProps {
@@ -15,46 +8,49 @@ interface ReservationsTableProps {
 
 export function ReservationsTable({ reservations, isLoading }: ReservationsTableProps) {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Car</TableHead>
-          <TableHead>Start Time</TableHead>
-          <TableHead>End Time</TableHead>
-          <TableHead>Purpose</TableHead>
-          <TableHead>Status</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
+    <div className="h-fit max-h-[400px] w-full bg-background rounded-lg shadow-sm border p-4 overflow-y-auto">
+      <div className="space-y-2">
         {isLoading ? (
-          <TableRow>
-            <TableCell colSpan={5} className="text-center">Loading reservations...</TableCell>
-          </TableRow>
+          <div className="text-center py-4">Loading reservations...</div>
         ) : reservations?.length === 0 ? (
-          <TableRow>
-            <TableCell colSpan={5} className="text-center">No reservations found</TableCell>
-          </TableRow>
+          <div className="text-center text-muted-foreground py-4 text-sm">
+            No reservations found
+          </div>
         ) : (
           reservations?.map((reservation) => (
-            <TableRow key={reservation.id}>
-              <TableCell>{`${reservation.car.make} ${reservation.car.model}`}</TableCell>
-              <TableCell>{new Date(reservation.start_time).toLocaleString()}</TableCell>
-              <TableCell>{new Date(reservation.end_time).toLocaleString()}</TableCell>
-              <TableCell>{reservation.purpose || '-'}</TableCell>
-              <TableCell>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  reservation.status === 'approved' ? 'bg-green-100 text-green-800' :
-                  reservation.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                  reservation.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                  'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1)}
-                </span>
-              </TableCell>
-            </TableRow>
+            <div 
+              key={reservation.id}
+              className="flex items-center justify-between p-3 bg-white rounded-lg border"
+            >
+              <div className="space-y-0.5">
+                <div className="font-medium text-sm">
+                  {reservation.car.make} {reservation.car.model}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Purpose: {reservation.purpose || '-'}
+                </div>
+                <div className="text-xs">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                    reservation.status === 'approved' ? 'bg-green-100 text-green-800' :
+                    reservation.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                    reservation.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                    'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1)}
+                  </span>
+                </div>
+              </div>
+              <div className="text-xs text-right">
+                <div>{format(new Date(reservation.start_time), "EEE, MMM d")}</div>
+                <div className="text-muted-foreground">
+                  {format(new Date(reservation.start_time), "HH:mm")} - 
+                  {format(new Date(reservation.end_time), "HH:mm")}
+                </div>
+              </div>
+            </div>
           ))
         )}
-      </TableBody>
-    </Table>
+      </div>
+    </div>
   );
 }
