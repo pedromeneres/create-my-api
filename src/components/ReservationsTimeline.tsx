@@ -15,7 +15,7 @@ import {
   Cell,
   ReferenceLine,
 } from "recharts";
-import { format, addHours, startOfDay, endOfDay } from "date-fns";
+import { format, addDays, startOfDay, endOfDay, addHours, startOfWeek } from "date-fns";
 
 interface TimelineReservation {
   id: string;
@@ -59,16 +59,13 @@ export function ReservationsTimeline() {
 
       if (error) throw error;
 
-      // Get current user's email
       const { data: { user } } = await supabase.auth.getUser();
       
-      // Create a simple map with just the current user's ID and email
       const emailMap = new Map();
       if (user?.email) {
         emailMap.set(user.id, user.email);
       }
 
-      // Combine the data
       return reservationsData.map((reservation: any) => ({
         ...reservation,
         car: reservation.car,
@@ -81,17 +78,22 @@ export function ReservationsTimeline() {
     return <div>Loading timeline...</div>;
   }
 
-  // Create time slots for the day (every hour)
-  const today = new Date();
-  const timeSlots = Array.from({ length: 24 }, (_, i) => ({
-    time: addHours(startOfDay(today), i).getTime(),
-    label: format(addHours(startOfDay(today), i), 'HH:mm'),
+  // Get the start of the current week
+  const weekStart = startOfWeek(new Date());
+  
+  // Create array of 5 days
+  const days = Array.from({ length: 5 }, (_, i) => addDays(weekStart, i));
+  
+  // Create array of 24 hours
+  const hours = Array.from({ length: 24 }, (_, i) => ({
+    hour: i,
+    label: format(addHours(startOfDay(new Date()), i), 'HH:mm'),
   }));
 
   const timelineData = reservations?.map((reservation) => ({
     x: new Date(reservation.start_time).getTime(),
-    y: 1,
-    width: (new Date(reservation.end_time).getTime() - new Date(reservation.start_time).getTime()) / (1000 * 60 * 60), // Width in hours
+    y: new Date(reservation.start_time).getHours(),
+    height: (new Date(reservation.end_time).getHours() - new Date(reservation.start_time).getHours()),
     label: `${reservation.user_email} - ${reservation.car.make} ${reservation.car.model}`,
     id: reservation.id,
     startTime: format(new Date(reservation.start_time), 'HH:mm'),
@@ -99,7 +101,7 @@ export function ReservationsTimeline() {
   }));
 
   return (
-    <div className="h-[600px] w-full bg-background rounded-lg shadow-sm border">
+    <div className="h-[800px] w-full bg-background rounded-lg shadow-sm border">
       <ChartContainer
         className="h-full"
         config={{
@@ -121,24 +123,34 @@ export function ReservationsTimeline() {
         >
           <XAxis
             dataKey="x"
-            domain={[startOfDay(today).getTime(), endOfDay(today).getTime()]}
-            name="Time"
-            tickFormatter={(unixTime) => format(new Date(unixTime), "HH:mm")}
+            domain={[days[0].getTime(), days[4].getTime()]}
+            name="Day"
+            tickFormatter={(unixTime) => format(new Date(unixTime), "EEE dd/MM")}
             type="number"
             interval={0}
-            ticks={timeSlots.map(slot => slot.time)}
+            ticks={days.map(day => day.getTime())}
           />
-          <YAxis 
+          <YAxis
             type="number"
-            domain={[0, 2]}
-            ticks={[1]}
-            tickFormatter={() => "Reservations"}
+            domain={[0, 23]}
+            ticks={hours.map(h => h.hour)}
+            tickFormatter={(hour) => format(addHours(startOfDay(new Date()), hour), 'HH:mm')}
+            reversed
           />
-          {/* Add vertical lines for each hour */}
-          {timeSlots.map((slot) => (
+          {/* Add horizontal lines for each hour */}
+          {hours.map((hour) => (
             <ReferenceLine
-              key={slot.time}
-              x={slot.time}
+              key={hour.hour}
+              y={hour.hour}
+              stroke="#e5e7eb"
+              strokeDasharray="3 3"
+            />
+          ))}
+          {/* Add vertical lines for each day */}
+          {days.map((day) => (
+            <ReferenceLine
+              key={day.getTime()}
+              x={day.getTime()}
               stroke="#e5e7eb"
               strokeDasharray="3 3"
             />
@@ -152,7 +164,7 @@ export function ReservationsTimeline() {
                 <ChartTooltipContent>
                   <div className="flex flex-col gap-2 bg-background p-3 rounded-lg shadow-lg border">
                     <div className="font-medium">
-                      {format(new Date(data.x), "MM/dd/yyyy")}
+                      {format(new Date(data.x), "EEEE, MMM dd")}
                     </div>
                     <div>{data.label}</div>
                     <div className="text-sm text-muted-foreground">
@@ -166,15 +178,15 @@ export function ReservationsTimeline() {
           <Scatter 
             data={timelineData || []} 
             shape={(props) => {
-              const { cx, cy, width, fill } = props;
-              // Convert the width from the data to pixels
-              const pixelWidth = (width as number) * 30; // Adjust this multiplier to change the visual width
+              const { cx, cy, height, fill } = props;
+              // Convert the height from hours to pixels
+              const pixelHeight = (height as number) * 30; // Adjust this multiplier to change the visual height
               return (
                 <rect
-                  x={cx - pixelWidth / 2}
-                  y={cy - 20}
-                  width={pixelWidth}
-                  height={40}
+                  x={cx - 40}
+                  y={cy}
+                  width={80}
+                  height={pixelHeight || 30} // Minimum height of 30px
                   fill={fill}
                   rx={6}
                   ry={6}
