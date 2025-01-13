@@ -103,7 +103,7 @@ const Index = () => {
         </header>
 
         {/* Quick Stats */}
-        <div className="mb-6">
+        <div className="grid grid-cols-2 gap-6 mb-6">
           <DashboardStats 
             cars={cars}
             reservations={reservations}
@@ -125,7 +125,7 @@ const Index = () => {
         </Card>
 
         {/* Cars and Recent Reservations Side by Side */}
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Available Cars */}
           <Card>
             <CardHeader className="p-4 sm:p-6">
