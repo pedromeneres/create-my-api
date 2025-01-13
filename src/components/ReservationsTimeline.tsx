@@ -24,7 +24,7 @@ interface TimelineReservation {
     make: string;
     model: string;
   };
-  user_id: string;
+  user_email: string;
 }
 
 const colors = [
@@ -58,22 +58,25 @@ export function ReservationsTimeline() {
 
       if (error) throw error;
 
-      // Then, get user emails in a separate query
+      // Get user emails
       const { data: users, error: usersError } = await supabase.auth.admin.listUsers();
       
       if (usersError) throw usersError;
 
       // Create a map of user IDs to emails
-      const userEmailMap = new Map(
-        users.users.map((user: { id: string; email: string }) => [user.id, user.email])
-      );
+      const emailMap = new Map();
+      users.users.forEach((user: any) => {
+        if (user.email) {
+          emailMap.set(user.id, user.email);
+        }
+      });
 
       // Combine the data
       return reservationsData.map((reservation: any) => ({
         ...reservation,
-        car: reservation.cars,
-        user_email: userEmailMap.get(reservation.user_id) || 'Unknown User',
-      })) as (TimelineReservation & { user_email: string })[];
+        car: reservation.car,
+        user_email: emailMap.get(reservation.user_id) || 'Unknown User',
+      })) as TimelineReservation[];
     },
   });
 
@@ -84,8 +87,10 @@ export function ReservationsTimeline() {
   const timelineData = reservations?.map((reservation) => ({
     x: new Date(reservation.start_time).getTime(),
     y: 1,
-    label: `${reservation.user_email}-${reservation.car.make} ${reservation.car.model}`,
+    label: `${reservation.user_email} - ${reservation.car.make} ${reservation.car.model}`,
     id: reservation.id,
+    startTime: format(new Date(reservation.start_time), 'HH:mm'),
+    endTime: format(new Date(reservation.end_time), 'HH:mm'),
   }));
 
   return (
@@ -121,14 +126,17 @@ export function ReservationsTimeline() {
             content={({ active, payload }) => {
               if (!active || !payload?.length) return null;
 
-              const value = payload[0].value as number;
+              const data = payload[0].payload;
               return (
                 <ChartTooltipContent>
                   <div className="flex flex-col gap-2">
                     <div className="font-medium">
-                      {format(new Date(value), "MM/dd/yyyy HH:mm")}
+                      {format(new Date(data.x), "MM/dd/yyyy")}
                     </div>
-                    <div>{payload[0].payload.label}</div>
+                    <div>{data.label}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {data.startTime} - {data.endTime}
+                    </div>
                   </div>
                 </ChartTooltipContent>
               );
