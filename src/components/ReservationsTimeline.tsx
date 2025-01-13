@@ -99,32 +99,27 @@ export function ReservationsTimeline() {
     }
   });
 
-  // Group reservations by day and calculate positions to avoid overlap
   const timelineData = reservations?.flatMap((reservation) => {
     const startDate = new Date(reservation.start_time);
     const endDate = new Date(reservation.end_time);
     
-    // Calculate hours as decimal numbers for precise positioning
     const startHour = startDate.getHours() + (startDate.getMinutes() / 60);
     const endHour = endDate.getHours() + (endDate.getMinutes() / 60);
     
     const carId = `${reservation.car.make}-${reservation.car.model}`;
     
-    // Calculate the day's reservations to handle overlaps
     const dayReservations = reservations.filter(r => 
       format(new Date(r.start_time), 'yyyy-MM-dd') === format(startDate, 'yyyy-MM-dd')
     );
     
-    // Sort overlapping reservations by start time
     const sortedDayReservations = dayReservations.sort((a, b) => 
       new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
     );
     
-    // Find position index for current reservation
     const positionIndex = sortedDayReservations.findIndex(r => r.id === reservation.id);
     
-    // Calculate offset based on position (60px width + 10px gap)
-    const offset = positionIndex * 70;
+    // Reduce the offset between overlapping reservations (40px width + 10px gap)
+    const offset = positionIndex * 50;
     
     return {
       x: startDate.getTime(),
@@ -155,7 +150,7 @@ export function ReservationsTimeline() {
         <ScatterChart
           margin={{
             top: 20,
-            right: 30,
+            right: 20,
             bottom: 20,
             left: 60,
           }}
@@ -168,7 +163,7 @@ export function ReservationsTimeline() {
             type="number"
             interval={0}
             ticks={days.map(day => day.getTime())}
-            width={400}
+            width={250}
           />
           <YAxis
             type="number"
@@ -221,9 +216,9 @@ export function ReservationsTimeline() {
               return (
                 <g transform={`translate(${-(payload as any).xOffset}, 0)`}>
                   <rect
-                    x={cx - 30}
+                    x={cx - 20}
                     y={cy}
-                    width={60}
+                    width={40}
                     height={pixelHeight || 30}
                     fill={fill}
                     rx={6}
