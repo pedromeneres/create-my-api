@@ -33,6 +33,8 @@ const Login = () => {
   const handleError = (error: AuthError) => {
     if (error.message.includes("Password should be")) {
       setError("Password should be at least 6 characters long");
+    } else if (error.message.includes("email_address_invalid") || error.message.includes("Email address") && error.message.includes("is invalid")) {
+      setError("Please enter a valid email address");
     } else {
       setError(error.message);
     }
