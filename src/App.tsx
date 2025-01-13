@@ -33,26 +33,19 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
               title: "Authentication Error",
               description: error.message,
             });
-            queryClient.clear();
-            await supabase.auth.signOut();
           }
-        } else {
-          if (mounted) {
-            setIsAuthenticated(!!session);
-            if (!session) {
-              console.log("No active session found");
-              setIsAuthenticated(false);
-            } else {
-              console.log("Active session found:", session.user.email);
-            }
+        } else if (mounted) {
+          setIsAuthenticated(!!session);
+          if (session?.user) {
+            console.log("Active session found:", session.user.email);
+          } else {
+            console.log("No active session found");
           }
         }
       } catch (error) {
         console.error("Session check failed:", error);
         if (mounted) {
           setIsAuthenticated(false);
-          queryClient.clear();
-          await supabase.auth.signOut();
         }
       } finally {
         if (mounted) {
@@ -62,11 +55,13 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     };
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event, session?.user?.email);
       
-      if (mounted) {
-        if (event === 'SIGNED_OUT') {
+      if (!mounted) return;
+
+      switch (event) {
+        case 'SIGNED_OUT':
           setIsAuthenticated(false);
           queryClient.clear();
           toast({
@@ -74,28 +69,27 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
             title: "Signed Out",
             description: "You have been signed out successfully",
           });
-        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          break;
+
+        case 'SIGNED_IN':
           setIsAuthenticated(true);
-          if (event === 'SIGNED_IN') {
-            toast({
-              variant: "default",
-              title: "Welcome Back",
-              description: `Signed in as ${session?.user?.email}`,
-            });
-          }
-        } else if (event === 'USER_UPDATED') {
-          const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-          if (error || !currentSession) {
-            setIsAuthenticated(false);
-            queryClient.clear();
-            await supabase.auth.signOut();
-          } else {
-            setIsAuthenticated(true);
-          }
-        }
-        
-        setIsLoading(false);
+          toast({
+            variant: "default",
+            title: "Welcome Back",
+            description: `Signed in as ${session?.user?.email}`,
+          });
+          break;
+
+        case 'TOKEN_REFRESHED':
+          setIsAuthenticated(true);
+          break;
+
+        case 'USER_UPDATED':
+          setIsAuthenticated(!!session);
+          break;
       }
+      
+      setIsLoading(false);
     });
 
     // Initial session check
