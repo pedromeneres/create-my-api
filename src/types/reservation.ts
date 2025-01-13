@@ -8,6 +8,8 @@ export interface TimelineReservation {
   };
   user_id: string;
   user_email?: string;
+  status: string;
+  canCancel?: boolean;
 }
 
 export interface TransformedTimelineData {
