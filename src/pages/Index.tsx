@@ -126,7 +126,21 @@ const Index = () => {
 
         {/* Cars and Recent Reservations Side by Side */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Available Cars */}
+          {/* Recent Reservations - Now First */}
+          <Card>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-lg sm:text-xl">Your Reservations</CardTitle>
+              <CardDescription className="text-sm">Recent and upcoming car reservations</CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6">
+              <ReservationsTable 
+                reservations={reservations}
+                isLoading={reservationsLoading}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Available Cars - Now Second */}
           <Card>
             <CardHeader className="p-4 sm:p-6">
               <CardTitle className="text-lg sm:text-xl">Available Cars</CardTitle>
@@ -137,20 +151,6 @@ const Index = () => {
                 cars={cars}
                 isLoading={carsLoading}
                 onReserve={openReservationDialog}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Recent Reservations */}
-          <Card>
-            <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-lg sm:text-xl">Your Reservations</CardTitle>
-              <CardDescription className="text-sm">Recent and upcoming car reservations</CardDescription>
-            </CardHeader>
-            <CardContent className="p-4 sm:p-6">
-              <ReservationsTable 
-                reservations={reservations}
-                isLoading={reservationsLoading}
               />
             </CardContent>
           </Card>
