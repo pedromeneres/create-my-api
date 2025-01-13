@@ -24,7 +24,7 @@ interface TimelineReservation {
     make: string;
     model: string;
   };
-  user_email: string;
+  user_id: string;
 }
 
 const colors = [
@@ -42,23 +42,37 @@ export function ReservationsTimeline() {
   const { data: reservations, isLoading } = useQuery({
     queryKey: ["all-reservations"],
     queryFn: async () => {
+      // First, get reservations with car details
       const { data: reservationsData, error } = await supabase
         .from("reservations")
         .select(`
           id,
           start_time,
           end_time,
-          car:cars(make, model),
-          user:auth.users(email)
+          user_id,
+          cars (
+            make,
+            model
+          )
         `)
         .order("start_time", { ascending: true });
 
       if (error) throw error;
 
+      // Then, get user emails in a separate query
+      const { data: users, error: usersError } = await supabase.auth.admin.listUsers();
+      
+      if (usersError) throw usersError;
+
+      // Create a map of user IDs to emails
+      const userEmailMap = new Map(users.users.map(user => [user.id, user.email]));
+
+      // Combine the data
       return reservationsData.map((reservation: any) => ({
         ...reservation,
-        user_email: reservation.user.email,
-      })) as TimelineReservation[];
+        car: reservation.cars,
+        user_email: userEmailMap.get(reservation.user_id) || 'Unknown User',
+      })) as (TimelineReservation & { user_email: string })[];
     },
   });
 
@@ -98,7 +112,7 @@ export function ReservationsTimeline() {
             dataKey="x"
             domain={["auto", "auto"]}
             name="Time"
-            tickFormatter={(unixTime) => format(unixTime, "MM/dd/yyyy")}
+            tickFormatter={(unixTime) => format(new Date(unixTime), "MM/dd/yyyy")}
             type="number"
           />
           <YAxis hide domain={[0, 2]} />
@@ -110,7 +124,7 @@ export function ReservationsTimeline() {
                 <ChartTooltipContent>
                   <div className="flex flex-col gap-2">
                     <div className="font-medium">
-                      {format(payload[0].value, "MM/dd/yyyy HH:mm")}
+                      {format(new Date(payload[0].value), "MM/dd/yyyy HH:mm")}
                     </div>
                     <div>{payload[0].payload.label}</div>
                   </div>
