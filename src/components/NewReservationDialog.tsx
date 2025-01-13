@@ -5,6 +5,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Dialog,
   DialogContent,
@@ -39,18 +41,35 @@ interface Car {
   plate_number: string;
 }
 
-interface ReservationFormValues {
-  carId: string;
-  date: Date;
-  startTime: string;
-  endTime: string;
-  purpose: string;
-}
+const formSchema = z.object({
+  carId: z.string({
+    required_error: "Please select a car",
+  }),
+  date: z.date({
+    required_error: "Please select a date",
+  }),
+  startTime: z.string({
+    required_error: "Please select a start time",
+  }),
+  endTime: z.string({
+    required_error: "Please select an end time",
+  }),
+  purpose: z.string().min(1, "Purpose is required"),
+});
+
+type ReservationFormValues = z.infer<typeof formSchema>;
 
 export function NewReservationDialog() {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  const form = useForm<ReservationFormValues>();
+  const form = useForm<ReservationFormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      startTime: "",
+      endTime: "",
+      purpose: "",
+    },
+  });
 
   const { data: cars } = useQuery({
     queryKey: ["cars"],
