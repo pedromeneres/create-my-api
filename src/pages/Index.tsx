@@ -81,41 +81,43 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
         {/* Header Section */}
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0 mb-8">
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0 mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-primary">Family Car Reservation System</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-primary">Family Car Reservation</h1>
+            <p className="text-sm text-muted-foreground mt-1">
               {userEmail ? `Welcome, ${userEmail}` : 'Welcome!'}
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <NewReservationDialog 
               isOpen={isReservationDialogOpen}
               onOpenChange={setIsReservationDialogOpen}
               selectedCarId={selectedCarId}
             />
-            <Button onClick={handleLogout} variant="outline">
+            <Button onClick={handleLogout} variant="outline" size="sm" className="w-full sm:w-auto">
               Sign Out
             </Button>
           </div>
         </header>
 
         {/* Quick Stats */}
-        <DashboardStats 
-          cars={cars}
-          reservations={reservations}
-          userEmail={userEmail}
-        />
+        <div className="mb-6">
+          <DashboardStats 
+            cars={cars}
+            reservations={reservations}
+            userEmail={userEmail}
+          />
+        </div>
 
         {/* Recent Reservations */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Your Reservations</CardTitle>
-            <CardDescription>Recent and upcoming car reservations</CardDescription>
+        <Card className="mb-6">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-lg sm:text-xl">Your Reservations</CardTitle>
+            <CardDescription className="text-sm">Recent and upcoming car reservations</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6">
             <ReservationsTable 
               reservations={reservations}
               isLoading={reservationsLoading}
@@ -124,25 +126,25 @@ const Index = () => {
         </Card>
 
         {/* Reservations Timeline */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Reservations Timeline</CardTitle>
-            <CardDescription>
+        <Card className="mb-6">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-lg sm:text-xl">Reservations Timeline</CardTitle>
+            <CardDescription className="text-sm">
               Timeline view of all family car reservations
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6">
             <ReservationsTimeline />
           </CardContent>
         </Card>
 
         {/* Available Cars */}
         <Card>
-          <CardHeader>
-            <CardTitle>Available Cars</CardTitle>
-            <CardDescription>List of family cars available for reservation</CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-lg sm:text-xl">Available Cars</CardTitle>
+            <CardDescription className="text-sm">List of family cars available for reservation</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6 overflow-x-auto">
             <CarsTable 
               cars={cars}
               isLoading={carsLoading}
