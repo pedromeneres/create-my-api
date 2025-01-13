@@ -29,14 +29,14 @@ interface TimelineReservation {
 }
 
 const colors = [
-  "#9b87f5", // Primary Purple
-  "#7E69AB", // Secondary Purple
-  "#6E59A5", // Tertiary Purple
-  "#8B5CF6", // Vivid Purple
-  "#D946EF", // Magenta Pink
-  "#F97316", // Bright Orange
-  "#0EA5E9", // Ocean Blue
-  "#1EAEDB", // Bright Blue
+  "#9b87f5",
+  "#7E69AB",
+  "#6E59A5",
+  "#8B5CF6",
+  "#D946EF",
+  "#F97316",
+  "#0EA5E9",
+  "#1EAEDB",
 ];
 
 export function ReservationsTimeline() {
@@ -104,7 +104,7 @@ export function ReservationsTimeline() {
     const startDate = new Date(reservation.start_time);
     const endDate = new Date(reservation.end_time);
     
-    // Calculate hours with decimals for precise positioning
+    // Calculate hours as decimal numbers for precise positioning
     const startHour = startDate.getHours() + (startDate.getMinutes() / 60);
     const endHour = endDate.getHours() + (endDate.getMinutes() / 60);
     
@@ -123,13 +123,13 @@ export function ReservationsTimeline() {
     // Find position index for current reservation
     const positionIndex = sortedDayReservations.findIndex(r => r.id === reservation.id);
     
-    // Calculate offset based on position (80px width + 10px gap)
-    const offset = positionIndex * 90;
+    // Calculate offset based on position (60px width + 10px gap)
+    const offset = positionIndex * 70;
     
     return {
       x: startDate.getTime(),
-      y: startHour,  // Remove the Math.max/min to allow actual hours
-      height: endHour - startHour,  // Calculate actual height
+      y: startHour,
+      height: endHour - startHour,
       label: `${reservation.user_email}\n${reservation.car.make} ${reservation.car.model}`,
       id: reservation.id,
       startTime: format(startDate, 'HH:mm'),
@@ -168,6 +168,7 @@ export function ReservationsTimeline() {
             type="number"
             interval={0}
             ticks={days.map(day => day.getTime())}
+            width={400}
           />
           <YAxis
             type="number"
@@ -176,7 +177,6 @@ export function ReservationsTimeline() {
             tickFormatter={(hour) => format(addHours(startOfDay(new Date()), hour), 'HH:mm')}
             reversed
           />
-          {/* Add horizontal lines for each hour */}
           {hours.map((hour) => (
             <ReferenceLine
               key={hour.hour}
@@ -185,7 +185,6 @@ export function ReservationsTimeline() {
               strokeDasharray="3 3"
             />
           ))}
-          {/* Add vertical lines for each day */}
           {days.map((day) => (
             <ReferenceLine
               key={day.getTime()}
@@ -222,9 +221,9 @@ export function ReservationsTimeline() {
               return (
                 <g transform={`translate(${-(payload as any).xOffset}, 0)`}>
                   <rect
-                    x={cx - 40}
+                    x={cx - 30}
                     y={cy}
-                    width={80}
+                    width={60}
                     height={pixelHeight || 30}
                     fill={fill}
                     rx={6}
