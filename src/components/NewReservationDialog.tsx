@@ -42,19 +42,20 @@ interface Car {
   plate_number: string;
 }
 
+// Updated form schema with stricter UUID validation
 const formSchema = z.object({
   carId: z.string({
     required_error: "Please select a car",
-  }).min(1, "Please select a car"),
+  }).uuid("Invalid car selection").min(1, "Please select a car"),
   date: z.date({
     required_error: "Please select a date",
   }),
   startTime: z.string({
     required_error: "Please select a start time",
-  }),
+  }).min(1, "Start time is required"),
   endTime: z.string({
     required_error: "Please select an end time",
-  }),
+  }).min(1, "End time is required"),
   purpose: z.string().min(1, "Purpose is required"),
 });
 
@@ -73,13 +74,15 @@ export function NewReservationDialog({
 }: NewReservationDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  
+  // Initialize form with proper default values
   const form = useForm<ReservationFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      carId: "",
       startTime: "",
       endTime: "",
       purpose: "",
-      carId: selectedCarId || "",
     },
   });
 
@@ -104,7 +107,9 @@ export function NewReservationDialog({
 
   const onSubmit = async (values: ReservationFormValues) => {
     try {
+      // Get current user and validate
       const { data: { user } } = await supabase.auth.getUser();
+      
       if (!user?.id) {
         toast({
           variant: "destructive",
@@ -114,24 +119,23 @@ export function NewReservationDialog({
         return;
       }
 
-      if (!values.carId) {
+      // Validate car selection
+      if (!values.carId || values.carId.trim() === "") {
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Please select a car",
+          description: "Please select a valid car",
         });
         return;
       }
 
       // Create a new date object for start time
       const startDateTime = new Date(values.date);
-      if (!values.startTime) throw new Error("Start time is required");
       const [startHours, startMinutes] = values.startTime.split(":");
       startDateTime.setHours(parseInt(startHours), parseInt(startMinutes), 0, 0);
 
       // Create a new date object for end time
       const endDateTime = new Date(values.date);
-      if (!values.endTime) throw new Error("End time is required");
       const [endHours, endMinutes] = values.endTime.split(":");
       endDateTime.setHours(parseInt(endHours), parseInt(endMinutes), 0, 0);
 
@@ -140,6 +144,7 @@ export function NewReservationDialog({
         throw new Error("End time must be after start time");
       }
 
+      // Insert reservation with validated data
       const { error } = await supabase
         .from("reservations")
         .insert({
@@ -151,7 +156,10 @@ export function NewReservationDialog({
           status: 'Reserved'
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Reservation error:", error);
+        throw error;
+      }
 
       toast({
         title: "Success",
