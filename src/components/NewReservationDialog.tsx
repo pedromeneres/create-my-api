@@ -12,6 +12,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
@@ -88,13 +89,22 @@ export function NewReservationDialog() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
+      // Create a new date object for start time
       const startDateTime = new Date(values.date);
+      if (!values.startTime) throw new Error("Start time is required");
       const [startHours, startMinutes] = values.startTime.split(":");
-      startDateTime.setHours(parseInt(startHours), parseInt(startMinutes));
+      startDateTime.setHours(parseInt(startHours), parseInt(startMinutes), 0, 0);
 
+      // Create a new date object for end time
       const endDateTime = new Date(values.date);
+      if (!values.endTime) throw new Error("End time is required");
       const [endHours, endMinutes] = values.endTime.split(":");
-      endDateTime.setHours(parseInt(endHours), parseInt(endMinutes));
+      endDateTime.setHours(parseInt(endHours), parseInt(endMinutes), 0, 0);
+
+      // Validate that end time is after start time
+      if (endDateTime <= startDateTime) {
+        throw new Error("End time must be after start time");
+      }
 
       const { error } = await supabase
         .from("reservations")
@@ -135,6 +145,9 @@ export function NewReservationDialog() {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>New Reservation</DialogTitle>
+          <DialogDescription>
+            Create a new car reservation by filling out the form below.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -173,6 +186,7 @@ export function NewReservationDialog() {
                     selected={field.value}
                     onSelect={field.onChange}
                     className="rounded-md border"
+                    disabled={(date) => date < new Date()}
                   />
                   <FormMessage />
                 </FormItem>
