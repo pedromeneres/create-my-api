@@ -13,8 +13,9 @@ import {
   ScatterChart,
   Scatter,
   Cell,
+  ReferenceLine,
 } from "recharts";
-import { format } from "date-fns";
+import { format, addHours, startOfDay, endOfDay } from "date-fns";
 
 interface TimelineReservation {
   id: string;
@@ -80,9 +81,17 @@ export function ReservationsTimeline() {
     return <div>Loading timeline...</div>;
   }
 
+  // Create time slots for the day (every hour)
+  const today = new Date();
+  const timeSlots = Array.from({ length: 24 }, (_, i) => ({
+    time: addHours(startOfDay(today), i).getTime(),
+    label: format(addHours(startOfDay(today), i), 'HH:mm'),
+  }));
+
   const timelineData = reservations?.map((reservation) => ({
     x: new Date(reservation.start_time).getTime(),
     y: 1,
+    width: (new Date(reservation.end_time).getTime() - new Date(reservation.start_time).getTime()) / (1000 * 60 * 60), // Width in hours
     label: `${reservation.user_email} - ${reservation.car.make} ${reservation.car.model}`,
     id: reservation.id,
     startTime: format(new Date(reservation.start_time), 'HH:mm'),
@@ -90,7 +99,7 @@ export function ReservationsTimeline() {
   }));
 
   return (
-    <div className="h-[400px] w-full">
+    <div className="h-[600px] w-full bg-background rounded-lg shadow-sm border">
       <ChartContainer
         className="h-full"
         config={{
@@ -105,19 +114,35 @@ export function ReservationsTimeline() {
         <ScatterChart
           margin={{
             top: 20,
-            right: 20,
+            right: 30,
             bottom: 20,
-            left: 20,
+            left: 60,
           }}
         >
           <XAxis
             dataKey="x"
-            domain={["auto", "auto"]}
+            domain={[startOfDay(today).getTime(), endOfDay(today).getTime()]}
             name="Time"
-            tickFormatter={(unixTime) => format(new Date(unixTime), "MM/dd/yyyy")}
+            tickFormatter={(unixTime) => format(new Date(unixTime), "HH:mm")}
             type="number"
+            interval={0}
+            ticks={timeSlots.map(slot => slot.time)}
           />
-          <YAxis hide domain={[0, 2]} />
+          <YAxis 
+            type="number"
+            domain={[0, 2]}
+            ticks={[1]}
+            tickFormatter={() => "Reservations"}
+          />
+          {/* Add vertical lines for each hour */}
+          {timeSlots.map((slot) => (
+            <ReferenceLine
+              key={slot.time}
+              x={slot.time}
+              stroke="#e5e7eb"
+              strokeDasharray="3 3"
+            />
+          ))}
           <Tooltip
             content={({ active, payload }) => {
               if (!active || !payload?.length) return null;
@@ -125,7 +150,7 @@ export function ReservationsTimeline() {
               const data = payload[0].payload;
               return (
                 <ChartTooltipContent>
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-2 bg-background p-3 rounded-lg shadow-lg border">
                     <div className="font-medium">
                       {format(new Date(data.x), "MM/dd/yyyy")}
                     </div>
@@ -138,7 +163,25 @@ export function ReservationsTimeline() {
               );
             }}
           />
-          <Scatter data={timelineData || []}>
+          <Scatter 
+            data={timelineData || []} 
+            shape={(props) => {
+              const { cx, cy, width, fill } = props;
+              // Convert the width from the data to pixels
+              const pixelWidth = (width as number) * 30; // Adjust this multiplier to change the visual width
+              return (
+                <rect
+                  x={cx - pixelWidth / 2}
+                  y={cy - 20}
+                  width={pixelWidth}
+                  height={40}
+                  fill={fill}
+                  rx={6}
+                  ry={6}
+                />
+              );
+            }}
+          >
             {timelineData?.map((entry, index) => (
               <Cell
                 key={entry.id}
