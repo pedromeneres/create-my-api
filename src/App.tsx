@@ -19,10 +19,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     let mounted = true;
 
-    // Check current session
+    // Initial session check
     const checkSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
+        console.log("Initial session check:", session?.user?.email || "No session");
         
         if (error) {
           console.error("Session check error:", error);
@@ -36,11 +37,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
           }
         } else if (mounted) {
           setIsAuthenticated(!!session);
-          if (session?.user) {
-            console.log("Active session found:", session.user.email);
-          } else {
-            console.log("No active session found");
-          }
         }
       } catch (error) {
         console.error("Session check failed:", error);
@@ -54,15 +50,28 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    // Auth state change listener
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event, session?.user?.email);
-      
+
       if (!mounted) return;
 
       switch (event) {
+        case 'SIGNED_IN':
+          setIsAuthenticated(true);
+          setIsLoading(false);
+          toast({
+            variant: "default",
+            title: "Welcome Back",
+            description: `Signed in as ${session?.user?.email}`,
+          });
+          break;
+
         case 'SIGNED_OUT':
           setIsAuthenticated(false);
+          setIsLoading(false);
           queryClient.clear();
           toast({
             variant: "default",
@@ -71,31 +80,22 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
           });
           break;
 
-        case 'SIGNED_IN':
-          setIsAuthenticated(true);
-          toast({
-            variant: "default",
-            title: "Welcome Back",
-            description: `Signed in as ${session?.user?.email}`,
-          });
-          break;
-
         case 'TOKEN_REFRESHED':
           setIsAuthenticated(true);
+          setIsLoading(false);
           break;
 
         case 'USER_UPDATED':
           setIsAuthenticated(!!session);
+          setIsLoading(false);
           break;
       }
-      
-      setIsLoading(false);
     });
 
-    // Initial session check
+    // Perform initial session check
     checkSession();
 
-    // Cleanup function
+    // Cleanup
     return () => {
       mounted = false;
       subscription.unsubscribe();
