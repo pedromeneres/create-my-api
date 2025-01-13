@@ -132,7 +132,7 @@ export function NewReservationDialog({
           start_time: startDateTime.toISOString(),
           end_time: endDateTime.toISOString(),
           purpose: values.purpose,
-          status: 'pending'
+          status: 'approved'
         });
 
       if (error) throw error;
@@ -163,15 +163,17 @@ export function NewReservationDialog({
   return (
     <Dialog open={isOpen ?? open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
+        <Button className="gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200">
           <PlusCircle className="h-4 w-4" />
           New Reservation
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] bg-white/95 backdrop-blur-sm shadow-2xl border-2">
         <DialogHeader>
-          <DialogTitle>New Reservation</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+            New Reservation
+          </DialogTitle>
+          <DialogDescription className="text-gray-600">
             Create a new car reservation by filling out the form below.
           </DialogDescription>
         </DialogHeader>
@@ -182,10 +184,10 @@ export function NewReservationDialog({
               name="carId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Car</FormLabel>
+                  <FormLabel className="font-medium">Car</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="border-2 hover:border-blue-500 transition-colors">
                         <SelectValue placeholder="Select a car" />
                       </SelectTrigger>
                     </FormControl>
@@ -206,12 +208,12 @@ export function NewReservationDialog({
               name="date"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Date</FormLabel>
+                  <FormLabel className="font-medium">Date</FormLabel>
                   <Calendar
                     mode="single"
                     selected={field.value}
                     onSelect={field.onChange}
-                    className="rounded-md border"
+                    className="rounded-md border-2 p-2 hover:border-blue-500 transition-colors"
                     disabled={(date) => date < new Date()}
                   />
                   <FormMessage />
@@ -224,9 +226,13 @@ export function NewReservationDialog({
                 name="startTime"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Start Time</FormLabel>
+                    <FormLabel className="font-medium">Start Time</FormLabel>
                     <FormControl>
-                      <Input type="time" {...field} />
+                      <Input 
+                        type="time" 
+                        {...field} 
+                        className="border-2 hover:border-blue-500 transition-colors"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -237,9 +243,13 @@ export function NewReservationDialog({
                 name="endTime"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>End Time</FormLabel>
+                    <FormLabel className="font-medium">End Time</FormLabel>
                     <FormControl>
-                      <Input type="time" {...field} />
+                      <Input 
+                        type="time" 
+                        {...field} 
+                        className="border-2 hover:border-blue-500 transition-colors"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -251,15 +261,22 @@ export function NewReservationDialog({
               name="purpose"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Purpose</FormLabel>
+                  <FormLabel className="font-medium">Purpose</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Enter the purpose of reservation" />
+                    <Input 
+                      {...field} 
+                      placeholder="Enter the purpose of reservation" 
+                      className="border-2 hover:border-blue-500 transition-colors"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full">
+            <Button 
+              type="submit" 
+              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+            >
               Create Reservation
             </Button>
           </form>
