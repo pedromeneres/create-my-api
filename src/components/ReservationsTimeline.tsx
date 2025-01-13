@@ -81,13 +81,13 @@ export function ReservationsTimeline() {
   // Get the start of the current week
   const weekStart = startOfWeek(new Date());
   
-  // Create array of 5 days
-  const days = Array.from({ length: 5 }, (_, i) => addDays(weekStart, i));
+  // Create array of 3 days (changed from 5)
+  const days = Array.from({ length: 3 }, (_, i) => addDays(weekStart, i));
   
-  // Create array of hours from 8 to 22
-  const hours = Array.from({ length: 15 }, (_, i) => ({
-    hour: i + 8,
-    label: format(addHours(startOfDay(new Date()), i + 8), 'HH:mm'),
+  // Create array of hours from 9 to 21 (changed from 8-22)
+  const hours = Array.from({ length: 13 }, (_, i) => ({
+    hour: i + 9,
+    label: format(addHours(startOfDay(new Date()), i + 9), 'HH:mm'),
   }));
 
   // Create a map of car IDs to colors
@@ -103,8 +103,11 @@ export function ReservationsTimeline() {
   const timelineData = reservations?.flatMap((reservation) => {
     const startDate = new Date(reservation.start_time);
     const endDate = new Date(reservation.end_time);
-    const startHour = startDate.getHours() + startDate.getMinutes() / 60;
-    const endHour = endDate.getHours() + endDate.getMinutes() / 60;
+    
+    // Calculate hours with decimals for precise positioning
+    const startHour = startDate.getHours() + (startDate.getMinutes() / 60);
+    const endHour = endDate.getHours() + (endDate.getMinutes() / 60);
+    
     const carId = `${reservation.car.make}-${reservation.car.model}`;
     
     // Calculate the day's reservations to handle overlaps
@@ -112,26 +115,21 @@ export function ReservationsTimeline() {
       format(new Date(r.start_time), 'yyyy-MM-dd') === format(startDate, 'yyyy-MM-dd')
     );
     
-    // Find overlapping reservations
-    const overlappingReservations = dayReservations.filter(r => {
-      const rStart = new Date(r.start_time);
-      const rEnd = new Date(r.end_time);
-      return (
-        r.id !== reservation.id &&
-        ((startDate >= rStart && startDate < rEnd) ||
-        (endDate > rStart && endDate <= rEnd) ||
-        (startDate <= rStart && endDate >= rEnd))
-      );
-    });
-
-    // Calculate horizontal offset based on number of overlaps
-    const offset = overlappingReservations.length > 0 ? 
-      (40 * (overlappingReservations.findIndex(r => r.id === reservation.id) + 1)) : 0;
+    // Sort overlapping reservations by start time
+    const sortedDayReservations = dayReservations.sort((a, b) => 
+      new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+    );
+    
+    // Find position index for current reservation
+    const positionIndex = sortedDayReservations.findIndex(r => r.id === reservation.id);
+    
+    // Calculate offset based on position (80px width + 10px gap)
+    const offset = positionIndex * 90;
     
     return {
       x: startDate.getTime(),
-      y: Math.max(8, Math.min(startHour, 22)),
-      height: Math.min(endHour, 22) - Math.max(startHour, 8),
+      y: Math.max(9, Math.min(startHour, 21)), // Changed from 8-22 to 9-21
+      height: Math.min(endHour, 21) - Math.max(startHour, 9),
       label: `${reservation.user_email}\n${reservation.car.make} ${reservation.car.model}`,
       id: reservation.id,
       startTime: format(startDate, 'HH:mm'),
@@ -164,7 +162,7 @@ export function ReservationsTimeline() {
         >
           <XAxis
             dataKey="x"
-            domain={[days[0].getTime(), days[4].getTime()]}
+            domain={[days[0].getTime(), days[2].getTime()]} // Changed from days[4] to days[2]
             name="Day"
             tickFormatter={(unixTime) => format(new Date(unixTime), "EEE dd/MM")}
             type="number"
@@ -173,7 +171,7 @@ export function ReservationsTimeline() {
           />
           <YAxis
             type="number"
-            domain={[8, 22]}
+            domain={[9, 21]} // Changed from [8, 22]
             ticks={hours.map(h => h.hour)}
             tickFormatter={(hour) => format(addHours(startOfDay(new Date()), hour), 'HH:mm')}
             reversed
