@@ -63,20 +63,30 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       console.log("Auth state changed:", event, !!session);
       
       if (mounted) {
-        setIsAuthenticated(!!session);
-        setIsLoading(false);
-
-        if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
-          // Handle sign out
+        if (event === 'SIGNED_OUT') {
           setIsAuthenticated(false);
           queryClient.clear(); // Clear query cache on logout
+          toast({
+            variant: "default",
+            title: "Signed Out",
+            description: "You have been signed out successfully",
+          });
+        } else if (event === 'SIGNED_IN') {
+          setIsAuthenticated(true);
+          toast({
+            variant: "default",
+            title: "Welcome Back",
+            description: "You have been signed in successfully",
+          });
         } else if (event === 'TOKEN_REFRESHED') {
-          // Session was refreshed, update authentication state
           setIsAuthenticated(true);
         }
+        
+        setIsLoading(false);
       }
     });
 
+    // Initial session check
     checkSession();
 
     // Cleanup function
