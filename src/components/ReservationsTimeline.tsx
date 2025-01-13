@@ -15,7 +15,7 @@ import {
   Cell,
   ReferenceLine,
 } from "recharts";
-import { format, addDays, startOfDay, endOfDay, addHours, startOfWeek } from "date-fns";
+import { format, addDays, startOfDay, endOfDay, addHours } from "date-fns";
 
 interface TimelineReservation {
   id: string;
@@ -78,13 +78,13 @@ export function ReservationsTimeline() {
     return <div>Loading timeline...</div>;
   }
 
-  // Get the start of the current week
-  const weekStart = startOfWeek(new Date());
+  // Start from today
+  const today = startOfDay(new Date());
   
-  // Create array of 3 days (changed from 5)
-  const days = Array.from({ length: 3 }, (_, i) => addDays(weekStart, i));
+  // Create array of 3 days starting from today
+  const days = Array.from({ length: 3 }, (_, i) => addDays(today, i));
   
-  // Create array of hours from 9 to 21 (changed from 8-22)
+  // Create array of hours from 9 to 21
   const hours = Array.from({ length: 13 }, (_, i) => ({
     hour: i + 9,
     label: format(addHours(startOfDay(new Date()), i + 9), 'HH:mm'),
@@ -128,8 +128,8 @@ export function ReservationsTimeline() {
     
     return {
       x: startDate.getTime(),
-      y: Math.max(9, Math.min(startHour, 21)), // Changed from 8-22 to 9-21
-      height: Math.min(endHour, 21) - Math.max(startHour, 9),
+      y: startHour,  // Remove the Math.max/min to allow actual hours
+      height: endHour - startHour,  // Calculate actual height
       label: `${reservation.user_email}\n${reservation.car.make} ${reservation.car.model}`,
       id: reservation.id,
       startTime: format(startDate, 'HH:mm'),
@@ -162,7 +162,7 @@ export function ReservationsTimeline() {
         >
           <XAxis
             dataKey="x"
-            domain={[days[0].getTime(), days[2].getTime()]} // Changed from days[4] to days[2]
+            domain={[days[0].getTime(), days[2].getTime()]}
             name="Day"
             tickFormatter={(unixTime) => format(new Date(unixTime), "EEE dd/MM")}
             type="number"
@@ -171,7 +171,7 @@ export function ReservationsTimeline() {
           />
           <YAxis
             type="number"
-            domain={[9, 21]} // Changed from [8, 22]
+            domain={[9, 21]}
             ticks={hours.map(h => h.hour)}
             tickFormatter={(hour) => format(addHours(startOfDay(new Date()), hour), 'HH:mm')}
             reversed
