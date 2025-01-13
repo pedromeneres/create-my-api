@@ -69,25 +69,32 @@ export function ReservationsTimeline() {
         .order('start_time', { ascending: true });
 
       if (error) {
-        console.error("Error fetching reservations:", error); // Debug log
+        console.error("Error fetching reservations:", error);
         throw error;
       }
 
-      console.log("Fetched reservations:", reservationsData); // Debug log
+      console.log("Fetched reservations:", reservationsData);
       
-      return reservationsData.map((reservation: any) => ({
-        ...reservation,
-        car: reservation.car,
-        user_email: user.email,
-        // Show cancel button if user owns the reservation and it's not already cancelled
-        canCancel: user.id === reservation.user_id && reservation.status !== 'cancelled',
-      }));
+      const transformedReservations = reservationsData.map((reservation: any) => {
+        const canCancel = user.id === reservation.user_id && reservation.status !== 'cancelled';
+        console.log(`Reservation ${reservation.id} - User ID match: ${user.id === reservation.user_id}, Status: ${reservation.status}, Can Cancel: ${canCancel}`);
+        
+        return {
+          ...reservation,
+          car: reservation.car,
+          user_email: user.email,
+          canCancel,
+        };
+      });
+
+      console.log("Transformed reservations:", transformedReservations);
+      return transformedReservations;
     },
   });
 
   const handleCancelReservation = async (reservationId: string) => {
     try {
-      console.log("Attempting to cancel reservation:", reservationId); // Debug log
+      console.log("Attempting to cancel reservation:", reservationId);
       
       const { error } = await supabase
         .from('reservations')
@@ -104,7 +111,7 @@ export function ReservationsTimeline() {
       // Refresh the reservations data
       queryClient.invalidateQueries({ queryKey: ["all-reservations"] });
     } catch (error) {
-      console.error("Cancel reservation error:", error); // Debug log
+      console.error("Cancel reservation error:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -178,7 +185,7 @@ export function ReservationsTimeline() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
+                      className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300 font-semibold"
                       onClick={() => handleCancelReservation(reservation.id)}
                     >
                       <X className="h-4 w-4 mr-1" />
