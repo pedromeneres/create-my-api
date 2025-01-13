@@ -10,11 +10,11 @@ interface DashboardStatsProps {
 
 export function DashboardStats({ cars, reservations }: DashboardStatsProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-      <Card>
+    <div className="flex w-full gap-6">
+      <Card className="flex-1">
         <CardContent className="pt-6">
           <div className="flex items-center space-x-4">
-            <Car className="h-8 w-8 text-primary" />
+            <Car className="h-8 w-8 text-primary shrink-0" />
             <div>
               <p className="text-sm font-medium">Available Cars</p>
               <h3 className="text-2xl font-bold">{cars?.length || 0}</h3>
@@ -23,10 +23,10 @@ export function DashboardStats({ cars, reservations }: DashboardStatsProps) {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="flex-1">
         <CardContent className="pt-6">
           <div className="flex items-center space-x-4">
-            <CalendarDays className="h-8 w-8 text-primary" />
+            <CalendarDays className="h-8 w-8 text-primary shrink-0" />
             <div>
               <p className="text-sm font-medium">Active Reservations</p>
               <h3 className="text-2xl font-bold">
