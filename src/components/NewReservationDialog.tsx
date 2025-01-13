@@ -132,7 +132,7 @@ export function NewReservationDialog({
           start_time: startDateTime.toISOString(),
           end_time: endDateTime.toISOString(),
           purpose: values.purpose,
-          status: 'approved'
+          status: 'Reserved'  // Changed from 'approved' to 'Reserved'
         });
 
       if (error) throw error;
