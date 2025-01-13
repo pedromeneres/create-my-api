@@ -11,13 +11,13 @@ export function TimelineShape({ cx, cy, height, fill, payload }: TimelineShapePr
   return (
     <g transform={`translate(${-payload.xOffset}, 0)`}>
       <rect
-        x={cx - 20}
+        x={cx - 15}
         y={cy}
-        width={40}
+        width={30}
         height={pixelHeight || 30}
         fill={fill}
-        rx={6}
-        ry={6}
+        rx={4}
+        ry={4}
       />
       <text
         x={cx}

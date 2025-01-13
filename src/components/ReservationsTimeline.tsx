@@ -74,10 +74,9 @@ export function ReservationsTimeline() {
         }}
       >
         <ScatterChart
-          width={500}
           margin={{
             top: 20,
-            right: 20,
+            right: 40,
             bottom: 20,
             left: 60,
           }}
@@ -90,8 +89,8 @@ export function ReservationsTimeline() {
             type="number"
             interval={0}
             ticks={days.map(day => day.getTime())}
-            width={250}
             scale="time"
+            padding={{ left: 30, right: 30 }}
           />
           <YAxis
             type="number"

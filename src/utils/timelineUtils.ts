@@ -52,7 +52,7 @@ export const transformTimelineData = (reservations: TimelineReservation[]): Tran
     );
     
     const positionIndex = sortedDayReservations.findIndex(r => r.id === reservation.id);
-    const offset = positionIndex * 50;
+    const offset = positionIndex * 25; // Reduced offset for better spacing
     
     return {
       x: startDate.getTime(),
