@@ -109,6 +109,20 @@ const Index = () => {
           userEmail={userEmail}
         />
 
+        {/* Recent Reservations */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Your Reservations</CardTitle>
+            <CardDescription>Recent and upcoming car reservations</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ReservationsTable 
+              reservations={reservations}
+              isLoading={reservationsLoading}
+            />
+          </CardContent>
+        </Card>
+
         {/* Reservations Timeline */}
         <Card className="mb-8">
           <CardHeader>
@@ -123,7 +137,7 @@ const Index = () => {
         </Card>
 
         {/* Available Cars */}
-        <Card className="mb-8">
+        <Card>
           <CardHeader>
             <CardTitle>Available Cars</CardTitle>
             <CardDescription>List of family cars available for reservation</CardDescription>
@@ -133,20 +147,6 @@ const Index = () => {
               cars={cars}
               isLoading={carsLoading}
               onReserve={openReservationDialog}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Recent Reservations */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Reservations</CardTitle>
-            <CardDescription>Recent and upcoming car reservations</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ReservationsTable 
-              reservations={reservations}
-              isLoading={reservationsLoading}
             />
           </CardContent>
         </Card>
