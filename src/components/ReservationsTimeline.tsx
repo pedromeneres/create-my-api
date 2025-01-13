@@ -148,6 +148,7 @@ export function ReservationsTimeline() {
         }}
       >
         <ScatterChart
+          width={500}  // Add fixed width to control overall chart size
           margin={{
             top: 20,
             right: 20,
@@ -164,6 +165,7 @@ export function ReservationsTimeline() {
             interval={0}
             ticks={days.map(day => day.getTime())}
             width={250}
+            scale="time"  // Add time scale for better distribution
           />
           <YAxis
             type="number"
