@@ -19,83 +19,73 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     let mounted = true;
 
-    // Initial session check
+    // Single session check function
     const checkSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        console.log("Initial session check:", session?.user?.email || "No session");
         
         if (error) {
-          console.error("Session check error:", error);
+          console.error("Session check error:", error.message);
           if (mounted) {
             setIsAuthenticated(false);
+            setIsLoading(false);
             toast({
               variant: "destructive",
               title: "Authentication Error",
-              description: error.message,
+              description: "Please sign in again",
             });
           }
-        } else if (mounted) {
+          return;
+        }
+
+        if (mounted) {
           setIsAuthenticated(!!session);
+          setIsLoading(false);
+          if (session?.user) {
+            console.log("Session found for:", session.user.email);
+          }
         }
       } catch (error) {
         console.error("Session check failed:", error);
         if (mounted) {
           setIsAuthenticated(false);
-        }
-      } finally {
-        if (mounted) {
           setIsLoading(false);
         }
       }
     };
 
     // Auth state change listener
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event, session?.user?.email);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event);
 
       if (!mounted) return;
 
-      switch (event) {
-        case 'SIGNED_IN':
-          setIsAuthenticated(true);
-          setIsLoading(false);
+      if (event === 'SIGNED_IN') {
+        setIsAuthenticated(true);
+        setIsLoading(false);
+        toast({
+          title: "Welcome Back",
+          description: `Signed in as ${session?.user?.email}`,
+        });
+      } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        queryClient.clear();
+        if (event === 'SIGNED_OUT') {
           toast({
-            variant: "default",
-            title: "Welcome Back",
-            description: `Signed in as ${session?.user?.email}`,
-          });
-          break;
-
-        case 'SIGNED_OUT':
-          setIsAuthenticated(false);
-          setIsLoading(false);
-          queryClient.clear();
-          toast({
-            variant: "default",
             title: "Signed Out",
             description: "You have been signed out successfully",
           });
-          break;
-
-        case 'TOKEN_REFRESHED':
-          setIsAuthenticated(true);
-          setIsLoading(false);
-          break;
-
-        case 'USER_UPDATED':
-          setIsAuthenticated(!!session);
-          setIsLoading(false);
-          break;
+        }
+      } else if (event === 'TOKEN_REFRESHED') {
+        // Recheck session when token is refreshed
+        await checkSession();
       }
     });
 
-    // Perform initial session check
+    // Initial session check
     checkSession();
 
-    // Cleanup
     return () => {
       mounted = false;
       subscription.unsubscribe();
