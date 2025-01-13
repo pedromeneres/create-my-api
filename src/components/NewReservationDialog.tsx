@@ -144,7 +144,7 @@ export function NewReservationDialog({
         throw new Error("End time must be after start time");
       }
 
-      // Insert reservation with validated data
+      // Insert reservation with validated data and correct status
       const { error } = await supabase
         .from("reservations")
         .insert({
@@ -153,7 +153,7 @@ export function NewReservationDialog({
           start_time: startDateTime.toISOString(),
           end_time: endDateTime.toISOString(),
           purpose: values.purpose,
-          status: 'Reserved'
+          status: 'pending' // Changed from 'Reserved' to 'pending'
         });
 
       if (error) {
@@ -163,7 +163,7 @@ export function NewReservationDialog({
 
       toast({
         title: "Success",
-        description: "Reservation created successfully",
+        description: "Reservation request submitted successfully",
       });
       setOpen(false);
       form.reset();
