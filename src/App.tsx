@@ -31,9 +31,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
             toast({
               variant: "destructive",
               title: "Authentication Error",
-              description: "Please sign in again",
+              description: error.message,
             });
-            // Clear session and cache
             queryClient.clear();
             await supabase.auth.signOut();
           }
@@ -41,14 +40,10 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
           if (mounted) {
             setIsAuthenticated(!!session);
             if (!session) {
-              toast({
-                variant: "destructive",
-                title: "Session Expired",
-                description: "Please sign in again",
-              });
-              // Clear session and cache
-              queryClient.clear();
-              await supabase.auth.signOut();
+              console.log("No active session found");
+              setIsAuthenticated(false);
+            } else {
+              console.log("Active session found:", session.user.email);
             }
           }
         }
@@ -68,7 +63,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, !!session);
+      console.log("Auth state changed:", event, session?.user?.email);
       
       if (mounted) {
         if (event === 'SIGNED_OUT') {
@@ -85,11 +80,10 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
             toast({
               variant: "default",
               title: "Welcome Back",
-              description: "You have been signed in successfully",
+              description: `Signed in as ${session?.user?.email}`,
             });
           }
         } else if (event === 'USER_UPDATED') {
-          // Refresh the session when user is updated
           const { data: { session: currentSession }, error } = await supabase.auth.getSession();
           if (error || !currentSession) {
             setIsAuthenticated(false);
@@ -112,7 +106,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [toast]); // Added toast to dependencies
+  }, [toast]);
 
   if (isLoading) {
     return (
