@@ -21,28 +21,22 @@ export function CarsTable({ cars, isLoading, onReserve }: CarsTableProps) {
       <TableHeader>
         <TableRow>
           <TableHead>Make</TableHead>
-          <TableHead>Model</TableHead>
-          <TableHead>Year</TableHead>
-          <TableHead>Plate Number</TableHead>
           <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {isLoading ? (
           <TableRow>
-            <TableCell colSpan={5} className="text-center">Loading cars...</TableCell>
+            <TableCell colSpan={2} className="text-center">Loading cars...</TableCell>
           </TableRow>
         ) : cars?.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={5} className="text-center">No cars available</TableCell>
+            <TableCell colSpan={2} className="text-center">No cars available</TableCell>
           </TableRow>
         ) : (
           cars?.map((car) => (
             <TableRow key={car.id}>
               <TableCell>{car.make}</TableCell>
-              <TableCell>{car.model}</TableCell>
-              <TableCell>{car.year}</TableCell>
-              <TableCell>{car.plate_number}</TableCell>
               <TableCell>
                 <Button 
                   variant="outline" 

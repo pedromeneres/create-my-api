@@ -111,6 +111,19 @@ const Index = () => {
           />
         </div>
 
+        {/* Reservations Timeline */}
+        <Card className="mb-6">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-lg sm:text-xl">Reservations Timeline</CardTitle>
+            <CardDescription className="text-sm">
+              Timeline view of all family car reservations
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-6">
+            <ReservationsTimeline />
+          </CardContent>
+        </Card>
+
         {/* Recent Reservations */}
         <Card className="mb-6">
           <CardHeader className="p-4 sm:p-6">
@@ -122,19 +135,6 @@ const Index = () => {
               reservations={reservations}
               isLoading={reservationsLoading}
             />
-          </CardContent>
-        </Card>
-
-        {/* Reservations Timeline */}
-        <Card className="mb-6">
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-lg sm:text-xl">Reservations Timeline</CardTitle>
-            <CardDescription className="text-sm">
-              Timeline view of all family car reservations
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-6">
-            <ReservationsTimeline />
           </CardContent>
         </Card>
 
