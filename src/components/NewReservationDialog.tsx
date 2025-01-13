@@ -153,7 +153,7 @@ export function NewReservationDialog({
           start_time: startDateTime.toISOString(),
           end_time: endDateTime.toISOString(),
           purpose: values.purpose,
-          status: 'pending' // Changed from 'Reserved' to 'pending'
+          status: 'approved' // Changed from 'pending' to 'approved'
         });
 
       if (error) {
@@ -163,7 +163,7 @@ export function NewReservationDialog({
 
       toast({
         title: "Success",
-        description: "Reservation request submitted successfully",
+        description: "Reservation created successfully",
       });
       setOpen(false);
       form.reset();
