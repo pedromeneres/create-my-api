@@ -99,20 +99,45 @@ export function ReservationsTimeline() {
     }
   });
 
-  const timelineData = reservations?.map((reservation) => {
-    const startHour = new Date(reservation.start_time).getHours();
-    const endHour = new Date(reservation.end_time).getHours();
+  // Group reservations by day and calculate positions to avoid overlap
+  const timelineData = reservations?.flatMap((reservation) => {
+    const startDate = new Date(reservation.start_time);
+    const endDate = new Date(reservation.end_time);
+    const startHour = startDate.getHours() + startDate.getMinutes() / 60;
+    const endHour = endDate.getHours() + endDate.getMinutes() / 60;
     const carId = `${reservation.car.make}-${reservation.car.model}`;
     
+    // Calculate the day's reservations to handle overlaps
+    const dayReservations = reservations.filter(r => 
+      format(new Date(r.start_time), 'yyyy-MM-dd') === format(startDate, 'yyyy-MM-dd')
+    );
+    
+    // Find overlapping reservations
+    const overlappingReservations = dayReservations.filter(r => {
+      const rStart = new Date(r.start_time);
+      const rEnd = new Date(r.end_time);
+      return (
+        r.id !== reservation.id &&
+        ((startDate >= rStart && startDate < rEnd) ||
+        (endDate > rStart && endDate <= rEnd) ||
+        (startDate <= rStart && endDate >= rEnd))
+      );
+    });
+
+    // Calculate horizontal offset based on number of overlaps
+    const offset = overlappingReservations.length > 0 ? 
+      (40 * (overlappingReservations.findIndex(r => r.id === reservation.id) + 1)) : 0;
+    
     return {
-      x: new Date(reservation.start_time).getTime(),
-      y: Math.max(8, Math.min(startHour, 22)), // Clamp between 8 and 22
-      height: Math.min(endHour, 22) - Math.max(startHour, 8), // Adjust height to fit within bounds
+      x: startDate.getTime(),
+      y: Math.max(8, Math.min(startHour, 22)),
+      height: Math.min(endHour, 22) - Math.max(startHour, 8),
       label: `${reservation.user_email}\n${reservation.car.make} ${reservation.car.model}`,
       id: reservation.id,
-      startTime: format(new Date(reservation.start_time), 'HH:mm'),
-      endTime: format(new Date(reservation.end_time), 'HH:mm'),
+      startTime: format(startDate, 'HH:mm'),
+      endTime: format(endDate, 'HH:mm'),
       color: carColorMap.get(carId),
+      xOffset: offset,
     };
   });
 
@@ -194,16 +219,15 @@ export function ReservationsTimeline() {
           <Scatter 
             data={timelineData || []} 
             shape={(props) => {
-              const { cx, cy, height, fill } = props;
-              // Convert the height from hours to pixels
-              const pixelHeight = (height as number) * 30; // Adjust this multiplier to change the visual height
+              const { cx, cy, height, fill, payload } = props;
+              const pixelHeight = (height as number) * 30;
               return (
-                <g>
+                <g transform={`translate(${-(payload as any).xOffset}, 0)`}>
                   <rect
                     x={cx - 40}
                     y={cy}
                     width={80}
-                    height={pixelHeight || 30} // Minimum height of 30px
+                    height={pixelHeight || 30}
                     fill={fill}
                     rx={6}
                     ry={6}

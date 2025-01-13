@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -60,7 +60,17 @@ const formSchema = z.object({
 
 type ReservationFormValues = z.infer<typeof formSchema>;
 
-export function NewReservationDialog() {
+interface NewReservationDialogProps {
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  selectedCarId?: string | null;
+}
+
+export function NewReservationDialog({ 
+  isOpen, 
+  onOpenChange,
+  selectedCarId 
+}: NewReservationDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const form = useForm<ReservationFormValues>({
@@ -69,8 +79,16 @@ export function NewReservationDialog() {
       startTime: "",
       endTime: "",
       purpose: "",
+      carId: selectedCarId || "",
     },
   });
+
+  // Update form when selectedCarId changes
+  useEffect(() => {
+    if (selectedCarId) {
+      form.setValue('carId', selectedCarId);
+    }
+  }, [selectedCarId, form]);
 
   const { data: cars } = useQuery({
     queryKey: ["cars"],
@@ -134,8 +152,16 @@ export function NewReservationDialog() {
     }
   };
 
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    onOpenChange?.(newOpen);
+    if (!newOpen) {
+      form.reset();
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={isOpen ?? open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="gap-2">
           <PlusCircle className="h-4 w-4" />
