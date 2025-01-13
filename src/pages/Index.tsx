@@ -124,34 +124,37 @@ const Index = () => {
           </CardContent>
         </Card>
 
-        {/* Recent Reservations */}
-        <Card className="mb-6">
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-lg sm:text-xl">Your Reservations</CardTitle>
-            <CardDescription className="text-sm">Recent and upcoming car reservations</CardDescription>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-6">
-            <ReservationsTable 
-              reservations={reservations}
-              isLoading={reservationsLoading}
-            />
-          </CardContent>
-        </Card>
+        {/* Cars and Recent Reservations Side by Side */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Available Cars */}
+          <Card>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-lg sm:text-xl">Available Cars</CardTitle>
+              <CardDescription className="text-sm">List of family cars available for reservation</CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6 overflow-x-auto">
+              <CarsTable 
+                cars={cars}
+                isLoading={carsLoading}
+                onReserve={openReservationDialog}
+              />
+            </CardContent>
+          </Card>
 
-        {/* Available Cars */}
-        <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-lg sm:text-xl">Available Cars</CardTitle>
-            <CardDescription className="text-sm">List of family cars available for reservation</CardDescription>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-6 overflow-x-auto">
-            <CarsTable 
-              cars={cars}
-              isLoading={carsLoading}
-              onReserve={openReservationDialog}
-            />
-          </CardContent>
-        </Card>
+          {/* Recent Reservations */}
+          <Card>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-lg sm:text-xl">Your Reservations</CardTitle>
+              <CardDescription className="text-sm">Recent and upcoming car reservations</CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6">
+              <ReservationsTable 
+                reservations={reservations}
+                isLoading={reservationsLoading}
+              />
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
