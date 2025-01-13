@@ -43,23 +43,23 @@ export function ReservationsTimeline() {
   }
 
   return (
-    <div className="h-[800px] w-full bg-background rounded-lg shadow-sm border p-6">
-      <div className="space-y-4">
+    <div className="h-fit max-h-[400px] w-full bg-background rounded-lg shadow-sm border p-4 overflow-y-auto">
+      <div className="space-y-2">
         {reservations?.map((reservation: TimelineReservation) => (
           <div 
             key={reservation.id}
-            className="flex items-center justify-between p-4 bg-white rounded-lg border"
+            className="flex items-center justify-between p-3 bg-white rounded-lg border"
           >
-            <div className="space-y-1">
-              <div className="font-medium">
+            <div className="space-y-0.5">
+              <div className="font-medium text-sm">
                 {reservation.car.make} {reservation.car.model}
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs text-muted-foreground">
                 Reserved by: {reservation.user_email}
               </div>
             </div>
-            <div className="text-sm text-right">
-              <div>{format(new Date(reservation.start_time), "EEE, MMM d, yyyy")}</div>
+            <div className="text-xs text-right">
+              <div>{format(new Date(reservation.start_time), "EEE, MMM d")}</div>
               <div className="text-muted-foreground">
                 {format(new Date(reservation.start_time), "HH:mm")} - 
                 {format(new Date(reservation.end_time), "HH:mm")}
@@ -68,7 +68,7 @@ export function ReservationsTimeline() {
           </div>
         ))}
         {reservations?.length === 0 && (
-          <div className="text-center text-muted-foreground py-8">
+          <div className="text-center text-muted-foreground py-4 text-sm">
             No reservations found
           </div>
         )}
