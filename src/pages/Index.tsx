@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/table";
 import { Car, CalendarDays, User } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { ReservationsTimeline } from "@/components/ReservationsTimeline";
 
 interface Car {
   id: string;
@@ -151,6 +152,19 @@ const Index = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Reservations Timeline */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Reservations Timeline</CardTitle>
+            <CardDescription>
+              Timeline view of all family car reservations
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ReservationsTimeline />
+          </CardContent>
+        </Card>
 
         {/* Available Cars */}
         <Card className="mb-8">
