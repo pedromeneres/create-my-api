@@ -45,6 +45,12 @@ export function ReservationsTimeline() {
     queryFn: async () => {
       const dateRange = getDateRange(selectedDay);
       
+      // First get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
+      console.log("Current user ID:", user.id); // Debug log
+      
       const { data: reservationsData, error } = await supabase
         .from("reservations")
         .select(`
@@ -62,26 +68,27 @@ export function ReservationsTimeline() {
         .lte('start_time', dateRange.end.toISOString())
         .order('start_time', { ascending: true });
 
-      if (error) throw error;
-
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      const emailMap = new Map();
-      if (user?.email) {
-        emailMap.set(user.id, user.email);
+      if (error) {
+        console.error("Error fetching reservations:", error); // Debug log
+        throw error;
       }
 
+      console.log("Fetched reservations:", reservationsData); // Debug log
+      
       return reservationsData.map((reservation: any) => ({
         ...reservation,
         car: reservation.car,
-        user_email: emailMap.get(reservation.user_id) || 'Other User',
-        canCancel: user?.id === reservation.user_id && reservation.status !== 'cancelled',
+        user_email: user.email,
+        // Show cancel button if user owns the reservation and it's not already cancelled
+        canCancel: user.id === reservation.user_id && reservation.status !== 'cancelled',
       }));
     },
   });
 
   const handleCancelReservation = async (reservationId: string) => {
     try {
+      console.log("Attempting to cancel reservation:", reservationId); // Debug log
+      
       const { error } = await supabase
         .from('reservations')
         .update({ status: 'cancelled' })
@@ -97,6 +104,7 @@ export function ReservationsTimeline() {
       // Refresh the reservations data
       queryClient.invalidateQueries({ queryKey: ["all-reservations"] });
     } catch (error) {
+      console.error("Cancel reservation error:", error); // Debug log
       toast({
         variant: "destructive",
         title: "Error",
@@ -158,7 +166,9 @@ export function ReservationsTimeline() {
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   <div className="text-xs text-right">
-                    <div className="font-medium text-blue-900">{format(new Date(reservation.start_time), "EEE, MMM d")}</div>
+                    <div className="font-medium text-blue-900">
+                      {format(new Date(reservation.start_time), "EEE, MMM d")}
+                    </div>
                     <div className="text-gray-600">
                       {format(new Date(reservation.start_time), "HH:mm")} - 
                       {format(new Date(reservation.end_time), "HH:mm")}
@@ -168,7 +178,7 @@ export function ReservationsTimeline() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
                       onClick={() => handleCancelReservation(reservation.id)}
                     >
                       <X className="h-4 w-4 mr-1" />
