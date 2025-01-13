@@ -21,6 +21,7 @@ import {
 import { Car, CalendarDays, User } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { ReservationsTimeline } from "@/components/ReservationsTimeline";
+import { NewReservationDialog } from "@/components/NewReservationDialog";
 
 interface Car {
   id: string;
@@ -105,9 +106,12 @@ const Index = () => {
               {userEmail ? `Welcome, ${userEmail}` : 'Welcome!'}
             </p>
           </div>
-          <Button onClick={handleLogout} variant="outline">
-            Sign Out
-          </Button>
+          <div className="flex items-center gap-4">
+            <NewReservationDialog />
+            <Button onClick={handleLogout} variant="outline">
+              Sign Out
+            </Button>
+          </div>
         </header>
 
         {/* Quick Stats */}
