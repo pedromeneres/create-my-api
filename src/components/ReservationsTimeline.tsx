@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +18,23 @@ export function ReservationsTimeline() {
   const [selectedDay, setSelectedDay] = useState<string>("today");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [session, setSession] = useState(null);
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+    });
+
+    // Listen for session changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+      setSession(currentSession);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const getDateRange = (day: string) => {
     const today = new Date();
@@ -43,13 +60,25 @@ export function ReservationsTimeline() {
   const { data: reservations, isLoading } = useQuery({
     queryKey: ["all-reservations", selectedDay],
     queryFn: async () => {
+      if (!session) {
+        throw new Error("No active session");
+      }
+
       const dateRange = getDateRange(selectedDay);
       
-      // First get the current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
+      // Get current session user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        console.error("Error getting user:", userError);
+        throw userError;
+      }
 
-      console.log("Current user ID:", user.id); // Debug log
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+
+      console.log("Current user ID:", user.id);
       
       const { data: reservationsData, error } = await supabase
         .from("reservations")
@@ -90,9 +119,19 @@ export function ReservationsTimeline() {
       console.log("Transformed reservations:", transformedReservations);
       return transformedReservations;
     },
+    enabled: !!session, // Only run query when session exists
   });
 
   const handleCancelReservation = async (reservationId: string) => {
+    if (!session) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "You must be logged in to cancel reservations.",
+      });
+      return;
+    }
+
     try {
       console.log("Attempting to cancel reservation:", reservationId);
       
