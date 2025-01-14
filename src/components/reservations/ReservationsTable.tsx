@@ -1,5 +1,7 @@
 import { format } from "date-fns";
 import { Reservation } from "@/types/reservation";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ReservationsTableProps {
   reservations: Reservation[] | undefined;
@@ -7,9 +9,20 @@ interface ReservationsTableProps {
 }
 
 export function ReservationsTable({ reservations, isLoading }: ReservationsTableProps) {
-  // Filter out past reservations
-  const currentReservations = reservations?.filter(reservation => 
-    new Date(reservation.end_time) >= new Date()
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Get current user's ID
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setUserId(user.id);
+      }
+    });
+  }, []);
+
+  // Filter reservations by current user and future dates
+  const userReservations = reservations?.filter(reservation => 
+    reservation.user_id === userId && new Date(reservation.end_time) >= new Date()
   );
 
   return (
@@ -17,12 +30,12 @@ export function ReservationsTable({ reservations, isLoading }: ReservationsTable
       <div className="space-y-2">
         {isLoading ? (
           <div className="text-center py-4">Loading reservations...</div>
-        ) : currentReservations?.length === 0 ? (
+        ) : userReservations?.length === 0 ? (
           <div className="text-center text-muted-foreground py-4 text-sm">
             No upcoming reservations found
           </div>
         ) : (
-          currentReservations?.map((reservation) => (
+          userReservations?.map((reservation) => (
             <div 
               key={reservation.id}
               className="flex items-center justify-between p-4 bg-gradient-to-r from-white to-blue-50 rounded-lg border-2 hover:border-blue-500 transition-all duration-200 hover:shadow-md"
