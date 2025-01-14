@@ -42,7 +42,6 @@ interface Car {
   plate_number: string;
 }
 
-// Updated form schema with stricter UUID validation
 const formSchema = z.object({
   carId: z.string({
     required_error: "Please select a car",
@@ -75,7 +74,6 @@ export function NewReservationDialog({
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   
-  // Initialize form with proper default values
   const form = useForm<ReservationFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -86,7 +84,6 @@ export function NewReservationDialog({
     },
   });
 
-  // Update form when selectedCarId changes
   useEffect(() => {
     if (selectedCarId) {
       form.setValue('carId', selectedCarId);
@@ -105,9 +102,24 @@ export function NewReservationDialog({
     },
   });
 
+  const checkCarAvailability = async (carId: string, startDateTime: Date, endDateTime: Date) => {
+    const { data: existingReservations, error } = await supabase
+      .from("reservations")
+      .select("*")
+      .eq('car_id', carId)
+      .eq('status', 'approved')
+      .or(`start_time.lte.${endDateTime.toISOString()},end_time.gte.${startDateTime.toISOString()}`);
+
+    if (error) {
+      console.error("Error checking car availability:", error);
+      throw error;
+    }
+
+    return !existingReservations || existingReservations.length === 0;
+  };
+
   const onSubmit = async (values: ReservationFormValues) => {
     try {
-      // Get current user and validate
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user?.id) {
@@ -119,7 +131,6 @@ export function NewReservationDialog({
         return;
       }
 
-      // Validate car selection
       if (!values.carId || values.carId.trim() === "") {
         toast({
           variant: "destructive",
@@ -129,22 +140,30 @@ export function NewReservationDialog({
         return;
       }
 
-      // Create a new date object for start time
       const startDateTime = new Date(values.date);
       const [startHours, startMinutes] = values.startTime.split(":");
       startDateTime.setHours(parseInt(startHours), parseInt(startMinutes), 0, 0);
 
-      // Create a new date object for end time
       const endDateTime = new Date(values.date);
       const [endHours, endMinutes] = values.endTime.split(":");
       endDateTime.setHours(parseInt(endHours), parseInt(endMinutes), 0, 0);
 
-      // Validate that end time is after start time
       if (endDateTime <= startDateTime) {
         throw new Error("End time must be after start time");
       }
 
-      // Insert reservation with validated data and correct status
+      // Check car availability
+      const isAvailable = await checkCarAvailability(values.carId, startDateTime, endDateTime);
+      
+      if (!isAvailable) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Car is already booked for the intended time",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from("reservations")
         .insert({
@@ -153,7 +172,7 @@ export function NewReservationDialog({
           start_time: startDateTime.toISOString(),
           end_time: endDateTime.toISOString(),
           purpose: values.purpose,
-          status: 'approved' // Changed from 'pending' to 'approved'
+          status: 'approved'
         });
 
       if (error) {
