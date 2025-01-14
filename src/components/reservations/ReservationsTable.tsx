@@ -7,17 +7,22 @@ interface ReservationsTableProps {
 }
 
 export function ReservationsTable({ reservations, isLoading }: ReservationsTableProps) {
+  // Filter out past reservations
+  const currentReservations = reservations?.filter(reservation => 
+    new Date(reservation.end_time) >= new Date()
+  );
+
   return (
     <div className="h-fit max-h-[400px] w-full bg-white/95 backdrop-blur-sm rounded-lg shadow-xl border-2 p-4 overflow-y-auto">
       <div className="space-y-2">
         {isLoading ? (
           <div className="text-center py-4">Loading reservations...</div>
-        ) : reservations?.length === 0 ? (
+        ) : currentReservations?.length === 0 ? (
           <div className="text-center text-muted-foreground py-4 text-sm">
-            No reservations found
+            No upcoming reservations found
           </div>
         ) : (
-          reservations?.map((reservation) => (
+          currentReservations?.map((reservation) => (
             <div 
               key={reservation.id}
               className="flex items-center justify-between p-4 bg-gradient-to-r from-white to-blue-50 rounded-lg border-2 hover:border-blue-500 transition-all duration-200 hover:shadow-md"

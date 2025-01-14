@@ -238,7 +238,11 @@ export function NewReservationDialog({
                     selected={field.value}
                     onSelect={field.onChange}
                     className="rounded-md border-2 p-2 hover:border-blue-500 transition-colors"
-                    disabled={(date) => date < new Date()}
+                    disabled={(date) => {
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      return date < today;
+                    }}
                   />
                   <FormMessage />
                 </FormItem>
