@@ -19,7 +19,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     let mounted = true;
 
-    // Single session check function
+    // Session check function
     const checkSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -67,19 +67,20 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
           title: "Welcome Back",
           description: `Signed in as ${session?.user?.email}`,
         });
-      } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+      } else if (event === 'SIGNED_OUT') {
         setIsAuthenticated(false);
         setIsLoading(false);
         queryClient.clear();
-        if (event === 'SIGNED_OUT') {
-          toast({
-            title: "Signed Out",
-            description: "You have been signed out successfully",
-          });
-        }
+        toast({
+          title: "Signed Out",
+          description: "You have been signed out successfully",
+        });
       } else if (event === 'TOKEN_REFRESHED') {
         // Recheck session when token is refreshed
         await checkSession();
+      } else if (event === 'USER_UPDATED') {
+        setIsAuthenticated(!!session);
+        setIsLoading(false);
       }
     });
 
